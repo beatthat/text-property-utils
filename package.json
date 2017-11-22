@@ -1,7 +1,7 @@
 {
     "name": "text-property-utils",
     "scope": "ape",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "property-interface components for working with text.",
     "main": "index.js",
     "repository": {
