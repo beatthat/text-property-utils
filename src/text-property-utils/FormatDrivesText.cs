@@ -48,6 +48,7 @@ namespace BeatThat
 		public bool m_debug;
 
 		public object GetDrivenObject() { return this.driven; }
+		public bool ClearDriven() { m_driven = null; return true; } 
 		#endregion
 
 		public string format { get { return m_format; } set { m_format = value; } }
