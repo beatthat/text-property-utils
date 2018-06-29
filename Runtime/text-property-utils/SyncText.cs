@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+using BeatThat.TransformPathExt;
+using BeatThat.Properties;
+using UnityEngine;
 using UnityEngine.Events;
 
-namespace BeatThat
+namespace BeatThat.Properties
 {
 	public class SyncText : MonoBehaviour, Syncable
 	{
@@ -90,3 +92,5 @@ namespace BeatThat
 		private UnityAction<string> m_syncAction;
 	}
 }
+
+

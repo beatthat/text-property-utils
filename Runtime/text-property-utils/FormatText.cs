@@ -1,15 +1,17 @@
-﻿using UnityEngine;
 using System;
+using BeatThat.Pools;
+using BeatThat.TransformPathExt;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
-namespace BeatThat
+namespace BeatThat.Properties
 {
-	/// <summary>
-	/// Use a format string for text and plugin properties to supply the inputs.
-	/// Updates target text when any of the inputs changes.
-	/// </summary>
-	public class FormatDrivesText : Subcontroller, IDrive<IHasText>
+    /// <summary>
+    /// Use a format string for text and plugin properties to supply the inputs.
+    /// Updates target text when any of the inputs changes.
+    /// </summary>
+    public class FormatText : PropertyBinding<IHasText, HasText>
 	{
 		/// <summary>
 		/// The String.format text format what will be applied to the driven text.
@@ -23,7 +25,11 @@ namespace BeatThat
 		/// If the format string is "My Name: {0} {1}", 
 		/// then maybe the input array should be [ firstName, lastName ]
 		/// </summary>
+		[Tooltip("array of properties that will supply the inputs to the formatted text, e.g. ig the format is '{0}/{1}' then there should be 2 inputs.")]
 		public HasValue[] m_inputs;
+
+		[Tooltip("array of placeholder inputs that will fill in the format while you're editting it.")]
+		public string[] m_editorPlaceholderInputs = new string[] { "placeholder" };
 
 		[Tooltip("update the driven text with format and inputs when Bind is called")]
 		public bool m_updateDrivenTextOnBind = true;
@@ -41,27 +47,18 @@ namespace BeatThat
 		[Tooltip("When string limiter is enabled, add ellipses if a string is truncated?")]
 		public bool m_onStringLimitAddEllipsis = true;
 
-		#region IDrive implementation
-		public HasText m_driven;
-		public IHasText driven { get { return m_driven?? (m_driven = this.GetSiblingComponent<HasText>()); } } 
-
-		public bool m_debug;
-
-		public object GetDrivenObject() { return this.driven; }
-		public bool ClearDriven() { m_driven = null; return true; } 
-		#endregion
 
 		public string format { get { return m_format; } set { m_format = value; } }
 
 		#if UNITY_EDITOR
 		virtual protected void Reset()
 		{
-			m_driven = GetComponent<HasText>();
+//			m_driven = GetComponent<HasText>();
 			m_inputs = new HasValue[1];
 		}
 		#endif
 			
-		override protected void BindSubcontroller()
+		override protected void BindProperty()
 		{
 			if(m_inputs == null) {
 				return;
@@ -113,13 +110,29 @@ namespace BeatThat
 
 			using(var inputList = ListPool<object>.Get()) {
 				foreach(var i in m_inputs) {
-					if(i != null) {
-						inputList.Add(i.valueObj);
+					if (i == null) {
+						#if UNITY_EDITOR || DEBUG_UNSTRIP
+						Debug.LogWarning("[" + Time.frameCount + "] " + this.Path() + " missing input item at index " + i);
+						#endif
+						inputList.Add("");
+						continue;
 					}
+
+					inputList.Add(i.valueObj);
 				}
 
 				using(var inputArgs = ArrayPool<object>.Get(inputList.Count)) {
-					inputList.CopyTo(inputArgs.array);
+					
+					if (!Application.isPlaying) {
+						for (var i = 0; i < inputArgs.array.Length; i++) {
+							inputArgs.array [i] = m_editorPlaceholderInputs != null && m_editorPlaceholderInputs.Length > 0 ? 
+								m_editorPlaceholderInputs [Mathf.Min (m_editorPlaceholderInputs.Length - 1, i)] : "";
+						}
+					}
+					else {
+						inputList.CopyTo(inputArgs.array);
+					}
+
 					this.driven.value = string.Format(this.format, inputArgs.array);
 				}
 			}
@@ -178,3 +191,6 @@ namespace BeatThat
 		}
 	}
 }
+
+
+

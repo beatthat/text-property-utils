@@ -1,5 +1,6 @@
-﻿
-namespace BeatThat
+using BeatThat.Properties;
+
+namespace BeatThat.Properties
 {
 	/// <summary>
 	/// a bool property that is TRUE when associated TextProp is non-empty
